@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GoogleLogin } from '@react-oauth/google';
 import FacebookLogin from '@greatsumini/react-facebook-login';
@@ -23,11 +23,12 @@ export default function Popup({ updateAuthValue }) {
   const [remember, rememberMe] = useState(false);
   const [show, onShow] = useState(false);
   const navigate = useNavigate();
+  const { state } = useLocation();
 
   function statusChecks(response) {
     switch (response.status) {
       case 200:
-        navigate('/');
+        navigate(state.navigate);
         updateAuthValue(response.body);
         break;
       case 401:
@@ -113,7 +114,7 @@ export default function Popup({ updateAuthValue }) {
   return (
     <div data-testid="login" className="background">
       <div className="popup__body">
-        <Link to="/" className="close" aria-label="Close" />
+        <Link to={state.navigate} className="close" aria-label="Close" />
         {error !== '' && <p data-testid="error" className="error">{error}</p>}
         <Field
           error={loginError}

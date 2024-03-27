@@ -120,13 +120,20 @@ export default function SearchField({
   }
 
   useEffect(() => {
+    let params = '';
     if (!(/^.*type=(bus|train|all).*$/).test(location.search)) {
-      navigate(`?${location.search.replace('?', '')}&type=all`);
+      params += '&type=all';
+    }
+    if (!(/^.*departureDate=\d+.*$/).test(location.search)) {
+      params += `&departureDate=${+new Date()}`;
+    }
+    if (params && location.pathname !== '/login') {
+      navigate(`?${location.search.replace('?', '')}${params}`, { replace: true });
     }
     const body = {
       departureCity: searchParams.get('from'),
       arrivalCity: searchParams.get('to'),
-      departureDate: searchParams.get('departureDate') ? new Date(+searchParams.get('departureDate')) : date,
+      departureDate: new Date(+searchParams.get('departureDate')),
       bus: searchParams.get('type') === 'bus' || searchParams.get('type') === 'all',
       train: searchParams.get('type') === 'train' || searchParams.get('type') === 'all',
       ferry: false,

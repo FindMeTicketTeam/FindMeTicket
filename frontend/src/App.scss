@@ -28,6 +28,7 @@ body {
   background: url('./Frame 4.1.jpg');
   overflow-y: auto;
   min-width: 1200px;
+  position: relative;
 }
 .body{
   display: flex;
@@ -285,15 +286,22 @@ body #bmc-wbtn {
   left: 20px;
   width: 50px !important;
   height: 50px !important;
+  position: absolute !important;
+  bottom: 35px !important;
+}
+
+body > div:nth-of-type(2) {
+  position: absolute !important;
 }
 
 body #bmc-iframe {
+  position: absolute !important;
   left: 45px;
   bottom: 85px !important;
   transform-origin: left bottom !important;
   height: 400px !important;
   min-height: 0 !important;
-
+}
 .search-field .input,
 .search-field .react-select__control,
 .search-city .react-select__control {

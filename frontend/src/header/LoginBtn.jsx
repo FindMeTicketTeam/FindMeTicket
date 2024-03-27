@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Cookies from 'universal-cookie';
 import makeQuerry from '../helper/querry';
 
@@ -9,6 +9,7 @@ export default function LoginBtn({ status, updateAuthValue, setIsProfilePopup })
   const { t } = useTranslation('translation', { keyPrefix: 'header' });
   const cookies = new Cookies(null, { path: '/' });
   const [logout, setLogout] = useState(false);
+  const { pathname } = useLocation();
 
   function handleLogoutButton() {
     setLogout(false);
@@ -50,6 +51,7 @@ export default function LoginBtn({ status, updateAuthValue, setIsProfilePopup })
       data-testid="login-btn"
       className="login-link"
       to="/login"
+      state={{ navigate: pathname }}
     >
       {t('login')}
     </Link>

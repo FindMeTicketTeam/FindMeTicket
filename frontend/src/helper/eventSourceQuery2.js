@@ -4,7 +4,7 @@ async function eventSourceQuery2({
   address, body, handleMessage, handleError, handleClose, handleOpen, method = 'GET', headers,
 }) {
   try {
-    await fetchEventSource(`http://localhost:8080/${address}`, {
+    await fetchEventSource(`http://localhost:${process.env.REACT_APP_PORT}/${address}`, {
       method,
       headers: {
         'Content-Type': 'application/json',

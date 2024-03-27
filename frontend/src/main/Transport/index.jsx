@@ -24,7 +24,7 @@ function TransportButton({
         src={img}
         alt={label}
       />
-      {loading ? <img src={loaderAnim} alt="Loading anim" /> : label}
+      {(loading && !disabled) ? <img src={loaderAnim} alt="Loading anim" /> : label}
     </button>
   );
 }
