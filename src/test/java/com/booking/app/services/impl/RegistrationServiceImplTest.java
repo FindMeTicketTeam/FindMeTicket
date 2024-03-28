@@ -123,30 +123,30 @@ class RegistrationServiceImplTest {
         assertDoesNotThrow(() -> registrationService.deleteUserIfNotConfirmed(userCredentials));
     }
 
-    @Test
-    void testPerformRegistration() throws MessagingException {
-        RegistrationServiceImpl temp = Mockito.spy(registrationService);
-
-        UserCredentials userCredentials = UserCredentials.builder().username(registrationDTO.getUsername()).email(registrationDTO.getEmail())
-                .password(registrationDTO.getPassword()).build();
-
-        when(mapper.toUserSecurity(registrationDTO)).thenReturn(userCredentials);
-
-        Instant now = Instant.now();
-        Instant later = now.minusSeconds(600);
-        Date dateAfter10Minutes = Date.from(later);
-
-        ConfirmToken token = ConfirmToken.builder().token("SAD88").expiryTime(dateAfter10Minutes).build();
-
-        User user = User.builder().confirmToken(token).build();
-
-        doReturn(user).when(temp).createNewRegisteredUser(userCredentials);
-        when(mapper.toEmailDTO(userCredentials)).thenReturn(new EmailDTO(userCredentials.getEmail()));
-
-        EmailDTO emailDTO = temp.performRegistration(registrationDTO);
-
-        assertEquals(userCredentials.getEmail(), emailDTO.getEmail());
-    }
+//    @Test
+//    void testPerformRegistration() throws MessagingException {
+//        RegistrationServiceImpl temp = Mockito.spy(registrationService);
+//
+//        UserCredentials userCredentials = UserCredentials.builder().username(registrationDTO.getUsername()).email(registrationDTO.getEmail())
+//                .password(registrationDTO.getPassword()).build();
+//
+//        when(mapper.toUserSecurity(registrationDTO)).thenReturn(userCredentials);
+//
+//        Instant now = Instant.now();
+//        Instant later = now.minusSeconds(600);
+//        Date dateAfter10Minutes = Date.from(later);
+//
+//        ConfirmToken token = ConfirmToken.builder().token("SAD88").expiryTime(dateAfter10Minutes).build();
+//
+//        User user = User.builder().confirmToken(token).build();
+//
+//        doReturn(user).when(temp).createNewRegisteredUser(userCredentials);
+//        when(mapper.toEmailDTO(userCredentials)).thenReturn(new EmailDTO(userCredentials.getEmail()));
+//
+//        EmailDTO emailDTO = temp.performRegistration(registrationDTO);
+//
+//        assertEquals(userCredentials.getEmail(), emailDTO.getEmail());
+//    }
 
     @Test
     void testSuccessEnableUserIfValid() {

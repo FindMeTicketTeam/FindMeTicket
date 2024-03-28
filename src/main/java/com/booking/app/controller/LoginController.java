@@ -79,18 +79,16 @@ public class LoginController implements LoginAPI {
             String accessToken = jwtProvider.generateAccessToken(loginDTO.getEmail());
 
             CookieUtils.addCookie(response, REFRESH_TOKEN, refreshToken, jwtProvider.getRefreshTokenExpirationMs(), true, true);
-            CookieUtils.addCookie(response, USER_ID, userCredentials.getId().toString(), jwtProvider.getRefreshTokenExpirationMs(), false, true);
+            CookieUtils.addCookie(response, USER_ID, userCredentials.getId().toString(), 10000000, false, true);
             response.setHeader(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
-
-//            response.setHeader(USER_ID, userCredentials.getId().toString());
-//            response.setHeader(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authenticationToken);
             SecurityContextHolder.setContext(context);
 
             AuthorizedUserDTO authorizedUserDTO = AuthorizedUserDTO.builder()
+                    .email(userCredentials.getEmail())
+                    .notification(userCredentials.getUser().getNotification())
                     .basicPicture(Base64.getEncoder().encodeToString(userCredentials.getUser().getProfilePicture()))
                     .username(userCredentials.getUsername()).build();
 
@@ -127,6 +125,8 @@ public class LoginController implements LoginAPI {
                             context.setAuthentication(new UsernamePasswordAuthenticationToken(userCredentials.getEmail(), userCredentials.getUsername(), userCredentials.getAuthorities()));
                             SecurityContextHolder.setContext(context);
                             authorizedUserDTO.set(AuthorizedUserDTO.builder()
+                                    .email(userCredentials.getEmail())
+                                    .notification(userCredentials.getUser().getNotification())
                                     .username(userCredentials.getUsername())
                                     .googlePicture(userCredentials.getUser().getUrlPicture()).build());
 

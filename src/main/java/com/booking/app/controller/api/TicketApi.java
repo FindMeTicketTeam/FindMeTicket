@@ -30,7 +30,7 @@ public interface TicketApi {
     @Operation(summary = "Searching tickets", description = "Find tickets based by criteria")
     @ApiResponse(responseCode = "200", description = "Returns tickets")
     @ApiResponse(responseCode = "404", description = "Tickets not found")
-    ResponseBodyEmitter findTickets(@NotNull @Valid RequestTicketsDTO ticketsDTO, @RequestHeader(HttpHeaders.CONTENT_LANGUAGE) String siteLanguage, HttpServletResponse response) throws IOException, ParseException;
+    ResponseBodyEmitter findTickets(@NotNull @Valid RequestTicketsDTO ticketsDTO, @RequestHeader(HttpHeaders.CONTENT_LANGUAGE) String siteLanguage, HttpServletResponse response, HttpServletRequest request) throws IOException, ParseException;
 
     @Operation(summary = "Single ticket", description = "Ticket by ID")
     @ApiResponse(responseCode = "200", description = "Returns ticket if found")

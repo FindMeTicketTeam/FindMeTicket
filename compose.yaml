@@ -46,7 +46,7 @@ services:
   driver-chrome:
     image: selenium/node-chrome:4.2
     ports:
-      - "6900:5900"
+      - "5900"
     scale: 7
     environment:
       - SE_EVENT_BUS_HOST=selenium-hub

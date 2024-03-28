@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Service implementation for providing type-ahead suggestions for cities based on start letters.
@@ -48,6 +49,11 @@ public class TypeAheadServiceImpl implements TypeAheadService {
                 .orElse(Collections.emptyList());
     }
 
+    @Override
+    public Long getCityId(String City, String language){
+        return getListOfPlaces(City, language).orElse(null).get(0).getId();
+    }
+
     /**
      * Get the list of places based on start letters and input language.
      *
@@ -55,10 +61,12 @@ public class TypeAheadServiceImpl implements TypeAheadService {
      * @param inputLanguage Detected input language.
      * @return Optional list of UkrainianPlaces matching the criteria.
      */
+
     private Optional<List<UkrainianPlaces>> getListOfPlaces(String startLetters, String inputLanguage) {
         return (inputLanguage.equals("eng"))
                 ? ukrPlacesRepository.findUkrainianPlacesByNameEngStartsWithIgnoreCaseAndNameEngNotContainingIgnoreCase(startLetters, "oblast")
                 : ukrPlacesRepository.findUkrainianPlacesByNameUaStartsWithIgnoreCaseAndNameUaNotContainingIgnoreCase(startLetters, "область");
     }
+
 
 }

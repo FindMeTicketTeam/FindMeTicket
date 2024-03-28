@@ -12,7 +12,11 @@ import lombok.NoArgsConstructor;
 public class AuthorizedUserDTO {
     private String username;
 
+    private String email;
+
     private String basicPicture;
 
     private String googlePicture;
+
+    private Boolean notification;
 }

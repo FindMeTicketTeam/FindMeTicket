@@ -92,17 +92,17 @@ public class RegistrationServiceImpl implements RegistrationService {
      * Creates user, token
      * Sends email
      *
-     * @param securityDTO The RegistrationDTO containing user registration details.
+     * @param registrationDTO The RegistrationDTO containing user registration details.
      * @return EmailDTO containing email
      * @throws MessagingException If there is an issue with sending the confirmation email.
      */
     //    @Transactional
-    public EmailDTO performRegistration(RegistrationDTO securityDTO) throws MessagingException {
-        UserCredentials securityEntity = mapper.toUserSecurity(securityDTO);
+    public EmailDTO performRegistration(RegistrationDTO registrationDTO) throws MessagingException {
+        UserCredentials securityEntity = mapper.toUserSecurity(registrationDTO);
         securityEntity.setProvider(EnumProvider.LOCAL);
-        securityEntity.setPassword(passwordEncoder.encode(securityDTO.getPassword()));
+        securityEntity.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
 
-        User user = createNewRegisteredUser(securityEntity);
+        User user = createNewRegisteredUser(securityEntity, registrationDTO.getNotification());
 
         mailService.sendEmail("confirmMailUa", "Email confirmation", user.getConfirmToken().getToken(), securityEntity);
 
@@ -116,13 +116,14 @@ public class RegistrationServiceImpl implements RegistrationService {
      * @return User that was saved
      */
     @Transactional
-    public User createNewRegisteredUser(UserCredentials userCredentials) {
+    public User createNewRegisteredUser(UserCredentials userCredentials, Boolean notification) {
         Role role = roleRepository.findRoleByEnumRole(EnumRole.USER);
 
         Avatar avatar = GitHubAvatar.newAvatarBuilder().layers(new ColorPaintBackgroundLayer(Color.WHITE)).build();
         byte[] asPngBytes = avatar.createAsPngBytes(new Random().nextLong());
 
         User user = User.builder()
+                .notification(notification)
                 .security(userCredentials)
                 .profilePicture(asPngBytes)
                 .role(role)

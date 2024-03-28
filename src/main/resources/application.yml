@@ -107,6 +107,8 @@ server:
       charset: UTF-8
       force: true
       enabled: true
+  error:
+    include-message: always
 
 #-------------------------
 # Third-party ticket's services
