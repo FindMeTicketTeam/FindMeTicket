@@ -64,21 +64,7 @@ public class ProizdTrainServiceImpl implements ScraperService {
 
         List<WebElement> elements = driver.findElements(By.cssSelector(DIV_TICKET));
 
-        log.info("Train tickets on proizd: " + elements.size());
-
-        for (int i = 0; i < elements.size() && i < 150; i++) {
-            TrainTicket scrapedTicket = scrapeTicketInfo(elements.get(i), route, language);
-            TrainTicket trainTicket = scrapedTicket;
-
-            if (route.getTickets().add(scrapedTicket)) {
-                if (BooleanUtils.isTrue(doDisplay))
-                    emitter.send(SseEmitter.event().name("Proizd train: ").data(trainMapper.toTrainTicketDto(scrapedTicket, language)));
-
-            } else
-                scrapedTicket = ((TrainTicket) route.getTickets().stream().filter(t -> t.equals(trainTicket)).findFirst().get()).addPrices(trainTicket);
-
-            trainRepository.save(scrapedTicket);
-        }
+        processScrapedTickets(emitter, route, language, doDisplay, elements);
 
         driver.quit();
         return CompletableFuture.completedFuture(true);
@@ -98,6 +84,24 @@ public class ProizdTrainServiceImpl implements ScraperService {
             driver.quit();
             log.info("Train tickets on proizd: NOT FOUND");
             return false;
+        }
+    }
+
+    private void processScrapedTickets(SseEmitter emitter, Route route, String language, Boolean doDisplay, List<WebElement> elements) throws IOException {
+        log.info("Train tickets on proizd: " + elements.size());
+
+        for (int i = 0; i < elements.size() && i < 150; i++) {
+            TrainTicket scrapedTicket = scrapeTicketInfo(elements.get(i), route, language);
+            TrainTicket trainTicket = scrapedTicket;
+
+            if (route.getTickets().add(scrapedTicket)) {
+                if (BooleanUtils.isTrue(doDisplay))
+                    emitter.send(SseEmitter.event().name("Proizd train: ").data(trainMapper.toTrainTicketDto(scrapedTicket, language)));
+
+            } else
+                scrapedTicket = ((TrainTicket) route.getTickets().stream().filter(t -> t.equals(trainTicket)).findFirst().get()).addPrices(trainTicket);
+
+            trainRepository.save(scrapedTicket);
         }
     }
 
@@ -213,10 +217,6 @@ public class ProizdTrainServiceImpl implements ScraperService {
         actions.moveToElement(inputCity).click().build().perform();
         inputCity.clear();
         inputCity.sendKeys(city);
-
-        synchronized (driver) {
-            driver.wait(1000);
-        }
 
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(cityXpath)));
     }

@@ -52,8 +52,8 @@ public class ScraperManager {
     @Qualifier("proizdTrainService")
     private final ScraperService proizdTrainService;
 
-    @Qualifier("gdtickets")
-    private final ScraperService gdticketsBusService;
+    @Qualifier("ticketsUa")
+    private final ScraperService ticketsUaService;
 
     private final RouteRepository routeRepository;
 

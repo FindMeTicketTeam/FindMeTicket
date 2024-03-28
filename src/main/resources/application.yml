@@ -122,6 +122,9 @@ link:
   infobus-ua-train: 'https://infobus.eu/ua/train'
   proizd-eng-train: 'https://proizd.ua/en'
   proizd-ua-train: 'https://proizd.ua/'
+  tickets-ua-train: 'https://gd.tickets.ua/?_gl=1*11dss7j*_ga*OTUxODMxMDk1LjE3MDE0NTk4NjE.*_ga_MHZEN4Q0P4*MTcxMTQwMjgzOC4xNC4xLjE3MTE0MDUzNTYuOC4wLjA.'
+  tickets-eng-train: 'https://gd.tickets.ua/en?_gl=1*11dss7j*_ga*OTUxODMxMDk1LjE3MDE0NTk4NjE.*_ga_MHZEN4Q0P4*MTcxMTQwMjgzOC4xNC4xLjE3MTE0MDUzNTYuOC4wLjA.'
+
 #-------------------------
 # API Key Configuration
 #-------------------------

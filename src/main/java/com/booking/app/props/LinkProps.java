@@ -23,4 +23,7 @@ public class LinkProps {
     private String proizdEngTrain;
     private String proizdUaTrain;
 
+    private String ticketsUaTrain;
+    private String ticketsEngTrain;
+
 }
