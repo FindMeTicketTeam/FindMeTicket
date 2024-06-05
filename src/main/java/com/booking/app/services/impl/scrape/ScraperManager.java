@@ -1,6 +1,6 @@
 package com.booking.app.services.impl.scrape;
 
-import com.booking.app.dto.RequestTicketsDTO;
+import com.booking.app.dto.RequestTicketsDto;
 import com.booking.app.dto.UrlAndPriceDTO;
 import com.booking.app.entity.ticket.Route;
 import com.booking.app.entity.ticket.Ticket;
@@ -64,7 +64,7 @@ public class ScraperManager {
     private final RouteMapper routeMapper;
 
     @Async
-    public CompletableFuture<Boolean> findTickets(RequestTicketsDTO requestTicketDTO, SseEmitter emitter, String language) throws IOException, ParseException {
+    public CompletableFuture<Boolean> findTickets(RequestTicketsDto requestTicketDTO, SseEmitter emitter, String language) throws IOException, ParseException {
 
         CompletableFuture<Boolean> result = sendTickets(requestTicketDTO, emitter, language);
 
@@ -73,7 +73,7 @@ public class ScraperManager {
         return result;
     }
 
-    private CompletableFuture<Boolean> sendTickets(RequestTicketsDTO requestTicketDTO, SseEmitter emitter, String language) throws ParseException, IOException {
+    private CompletableFuture<Boolean> sendTickets(RequestTicketsDto requestTicketDTO, SseEmitter emitter, String language) throws ParseException, IOException {
 
         Route route = routeRepository.findByDepartureCityAndArrivalCityAndDepartureDate(requestTicketDTO.getDepartureCity(), requestTicketDTO.getArrivalCity(), requestTicketDTO.getDepartureDate());
 
@@ -87,7 +87,7 @@ public class ScraperManager {
         }
     }
 
-    private CompletableFuture<Boolean> extractTickets(RequestTicketsDTO requestTicketDTO, SseEmitter emitter, String language, Route route, MutableBoolean emitterNotExpired) throws IOException {
+    private CompletableFuture<Boolean> extractTickets(RequestTicketsDto requestTicketDTO, SseEmitter emitter, String language, Route route, MutableBoolean emitterNotExpired) throws IOException {
         if (route.getTickets().isEmpty()) return CompletableFuture.completedFuture(false);
 
         List<Ticket> tickets = ticketRepository.findByRouteId(route.getId());
@@ -105,7 +105,7 @@ public class ScraperManager {
         return CompletableFuture.completedFuture(true);
     }
 
-    private CompletableFuture<Boolean> scrapeTickets(RequestTicketsDTO requestTicketDTO, SseEmitter emitter, String language, MutableBoolean emitterNotExpired) throws ParseException, IOException {
+    private CompletableFuture<Boolean> scrapeTickets(RequestTicketsDto requestTicketDTO, SseEmitter emitter, String language, MutableBoolean emitterNotExpired) throws ParseException, IOException {
 
         Route route = routeMapper.toRoute(requestTicketDTO);
         routeRepository.save(route);

@@ -1,11 +1,11 @@
 /* eslint-disable no-shadow */
 /* eslint-disable import/no-extraneous-dependencies */
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import './profile.scss';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import Cookies from 'universal-cookie';
-import { Link, useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import {Link, useNavigate} from 'react-router-dom';
+import {v4 as uuidv4} from 'uuid';
 import makeQuerry from '../helper/querry';
 import DeleteConfirmationPopup from '../header/deletePopup';
 import Frame from './Frame.svg';
@@ -14,7 +14,7 @@ import Email from './email.svg';
 import Phone from './phone.svg';
 import Address from './address.svg';
 import Ellipse from './Ellipse 9.png';
-import { busIcon, trainIcon, everythingIcon } from './transport-img/img';
+import {busIcon, everythingIcon, trainIcon} from './transport-img/img';
 import loaderIcon from './spinning-loading.svg';
 import AvatarPopup from './avatarPopup';
 import mark from './image 12.svg';
@@ -60,7 +60,7 @@ function Popup({
   }
 
   function handleDeleteButton() {
-    makeQuerry('delete-user', undefined, undefined, 'DELETE').then((response) => {
+    makeQuerry('/users', undefined, undefined, 'DELETE').then((response) => {
       switch (response.status) {
         case 200:
           navigate('/');
@@ -113,7 +113,7 @@ function Popup({
 
   async function getHistory() {
     setLoading(true);
-    const response = await makeQuerry('getHistory', undefined, undefined, 'GET');
+    const response = await makeQuerry('/users/history', undefined, undefined, 'GET');
     setLoading(false);
     switch (response.status) {
       case 200:
@@ -158,9 +158,9 @@ function Popup({
     await new Promise(() => {
       timerId.current = setTimeout(() => {
         if (notificationEnabled) {
-          makeQuerry('notifications/enable', undefined, undefined, 'GET');
+          makeQuerry('users/notification/on', undefined, undefined, 'GET');
         } else {
-          makeQuerry('notifications/disable', undefined, undefined, 'GET');
+          makeQuerry('users/notification/off', undefined, undefined, 'GET');
         }
       }, 2000);
     });
@@ -171,7 +171,7 @@ function Popup({
   }, [notificationEnabled]);
 
   if (!status) {
-    navigate('/login', { state: { successNavigate: '/profile-page', closeNavigate: '/' } });
+    navigate('/sign-in', { state: { successNavigate: '/profile-page', closeNavigate: '/' } });
     return <p>redirect</p>;
   }
 
@@ -191,7 +191,9 @@ function Popup({
           tabIndex={0}
         >
           <img src={rank1} alt="rank1" className="image-rank1-profile" />
-          <img src={status.googlePicture || (status.basicPicture ? `data:image/jpeg;base64,${status.basicPicture}` : Ellipse)} alt="Avatar" referrerPolicy="no-referrer" className="ava" />
+          <img
+              src={status.socialMediaAvatar || (status.defaultAvatar ? `data:image/jpeg;base64,${status.socialMediaAvatar}` : Ellipse)}
+              alt="Avatar" referrerPolicy="no-referrer" className="ava"/>
         </div>
         <p className="username">
           {t('hello')}
@@ -335,7 +337,7 @@ function Popup({
       {isAvatarPopupOpen && (
       <AvatarPopup
         closeAvatarPopup={closeAvatarPopup}
-        avatar={status.googlePicture || (status.basicPicture ? `data:image/jpeg;base64,${status.basicPicture}` : Ellipse)}
+        avatar={status.socialMediaAvatar || (status.defaultAvatar ? `data:image/jpeg;base64,${status.defaultAvatar}` : Ellipse)}
       />
       )}
     </div>

@@ -28,7 +28,7 @@ export default function Reviews({ status }) {
   const [reviews, setReviews] = useState([]);
 
   async function getReviews() {
-    const reviewsData = await makeQuery('getReviews', undefined, undefined, 'GET');
+    const reviewsData = await makeQuery('/reviews', undefined, undefined, 'GET');
     if (reviewsData.status !== 200) {
       return;
     }

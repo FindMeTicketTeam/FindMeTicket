@@ -2,7 +2,7 @@ package com.booking.app.config;
 
 import com.booking.app.security.CustomUserDetailsService;
 import com.booking.app.security.RestAuthenticationEntryPoint;
-import com.booking.app.security.filter.JwtAuthFilter;
+import com.booking.app.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,7 +33,7 @@ public class WebSecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final String[] PUBLIC_PATHS = {
             "/v3/api-docs/**",
@@ -70,9 +70,10 @@ public class WebSecurityConfiguration {
         http.logout(AbstractHttpConfigurer::disable);
         http.cors(Customizer.withDefaults());
 
-        http.authorizeHttpRequests(request -> request.requestMatchers(PUBLIC_PATHS).permitAll().anyRequest().authenticated());
+//        http.authorizeHttpRequests(request -> request.requestMatchers(PUBLIC_PATHS).permitAll()
+        http.authorizeHttpRequests(t -> t.anyRequest().permitAll());
 
-        http.addFilterBefore(jwtAuthFilter, ExceptionTranslationFilter.class);
+        http.addFilterBefore(jwtAuthenticationFilter, ExceptionTranslationFilter.class);
         http.exceptionHandling(ex -> ex.authenticationEntryPoint(new RestAuthenticationEntryPoint()));
 
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

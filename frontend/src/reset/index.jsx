@@ -43,7 +43,7 @@ export default function Index() {
       onSend(false);
       return;
     }
-    makeQuerry('reset', JSON.stringify({ email }))
+    makeQuerry('/send/reset-code', JSON.stringify({ email }))
       .then((response) => {
         onSend(false);
         statusChecks(response);

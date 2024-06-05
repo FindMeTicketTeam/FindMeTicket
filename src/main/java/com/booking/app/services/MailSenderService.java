@@ -1,34 +1,26 @@
 package com.booking.app.services;
 
-import com.booking.app.entity.UserCredentials;
-import jakarta.mail.MessagingException;
+import com.booking.app.exception.exception.UserNotFoundException;
 
-import java.nio.file.attribute.UserPrincipalNotFoundException;
 
-/**
- * Service interface for sending email.
- */
 public interface MailSenderService {
 
     /**
-     * This method sending email with specified token.
+     * Resends a confirmation email with a new confirmation token to the user.
      *
-     * @param htmlPage String html representation of the letter
-     * @param subject  String subject of the letter
-     * @param token    String generated token that is needed to confirm email
-     * @param user     UserSecurity recipient
-     * @throws MessagingException If there is an issue with sending the confirmation email.
+     * @param language the language preference for the email content
+     * @param email    the email address of the user to resend the confirmation to
+     * @throws UserNotFoundException if no user with the given email is found
      */
-    void sendEmail(String htmlPage, String subject, String token, UserCredentials user) throws MessagingException;
+    void sendVerificationCode(String email, String language) throws UserNotFoundException;
 
     /**
-     * This method generates new token end sends it
-     * on specified email
+     * Sends a reset code to the given email address.
+     * If the user is found and their account is enabled, a new confirmation code is created and emailed.
      *
-     * @param email String recipient
-     * @return Boolean returns true if the message was sent successfully either returns false
-     * @throws UserPrincipalNotFoundException If such user does not exist
-     * @throws MessagingException             If there is an issue with sending the confirmation email.
+     * @param email    the email address to send the reset code to
+     * @param language the language preference for the email content
      */
-    boolean resendEmail(String email, String htmlPage) throws MessagingException, UserPrincipalNotFoundException;
+    void sendResetCode(String email, String language);
+
 }

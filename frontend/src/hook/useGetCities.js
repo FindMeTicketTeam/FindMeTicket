@@ -21,7 +21,7 @@ export default function useGetCities() {
       clearInterval(timerId.current);
       const result = await new Promise((resolve) => {
         timerId.current = setTimeout(async () => {
-          const response = await makeQuerry('typeAhead', JSON.stringify({ startLetters: inputValue }));
+          const response = await makeQuerry('/typeahead', JSON.stringify({ startLetters: inputValue }));
           const responseBody = response.status === 200 ? response.body.map(transformData) : [];
           resolve(responseBody);
         }, 500);

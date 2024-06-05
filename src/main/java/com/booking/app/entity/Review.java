@@ -22,7 +22,7 @@ public class Review {
     private String reviewText;
 
     @Builder.Default
-    private LocalDateTime writingDate = LocalDateTime.now();
+    private LocalDateTime addingDate = LocalDateTime.now();
 
     private int grade;
 

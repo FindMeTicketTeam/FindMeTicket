@@ -21,13 +21,13 @@ import org.apache.commons.lang3.Range;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
@@ -202,12 +202,24 @@ public class BusforBusServiceImpl implements ScraperService {
         }
     }
 
-    private String determineBaseUri(String language) {
+    private static String formatDate(String inputDate, String language) {
+        DateTimeFormatter formatter;
+        DateTimeFormatter resultFormatter;
+
         return switch (language) {
-            case ("ua") -> linkProps.getBusforUaBus();
-            case ("eng") -> linkProps.getBusforEngBus();
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
+            case "ua" -> {
+                formatter = DateTimeFormatter.ofPattern("d MMM u", new Locale("uk"));
+                resultFormatter = DateTimeFormatter.ofPattern("dd.MM, EEE", new Locale("uk"));
+                LocalDate date = LocalDate.parse(inputDate + " " + Year.now().getValue(), formatter);
+                yield date.format(resultFormatter);
+            }
+            case "eng" -> {
+                formatter = DateTimeFormatter.ofPattern("d MMM u", new Locale("en"));
+                resultFormatter = DateTimeFormatter.ofPattern("dd.MM, EEE", new Locale("en"));
+                LocalDate date = LocalDate.parse(inputDate + " " + Year.now().getValue(), formatter);
+                yield date.format(resultFormatter);
+            }
+            default -> throw new UndefinedLanguageException();
         };
     }
 
@@ -250,30 +262,16 @@ public class BusforBusServiceImpl implements ScraperService {
         String arrivalDate = formatDate(arrivalDateTime.substring(6), language);
 
         if (language.equals("eng"))
-            price = currentRate.multiply(price).setScale(2, BigDecimal.ROUND_HALF_UP);
+            price = currentRate.multiply(price).setScale(2, RoundingMode.HALF_UP);
 
         return createTicket(route, departureInfo, arrivalInfo, departureDateTime, arrivalDateTime.substring(0, 5), arrivalDate, totalMinutes, price, carrier);
     }
 
-    private static String formatDate(String inputDate, String language) {
-        DateTimeFormatter formatter;
-        DateTimeFormatter resultFormatter;
-
+    private String determineBaseUri(String language) {
         return switch (language) {
-            case "ua" -> {
-                formatter = DateTimeFormatter.ofPattern("d MMM u", new Locale("uk"));
-                resultFormatter = DateTimeFormatter.ofPattern("dd.MM, EEE", new Locale("uk"));
-                LocalDate date = LocalDate.parse(inputDate + " " + Year.now().getValue(), formatter);
-                yield date.format(resultFormatter);
-            }
-            case "eng" -> {
-                formatter = DateTimeFormatter.ofPattern("d MMM u", new Locale("en"));
-                resultFormatter = DateTimeFormatter.ofPattern("dd.MM, EEE", new Locale("en"));
-                LocalDate date = LocalDate.parse(inputDate + " " + Year.now().getValue(), formatter);
-                yield date.format(resultFormatter);
-            }
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
+            case ("ua") -> linkProps.getBusforUaBus();
+            case ("eng") -> linkProps.getBusforEngBus();
+            default -> throw new UndefinedLanguageException();
         };
     }
 

@@ -1,7 +1,7 @@
 package com.booking.app.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +15,6 @@ public class UserDTO {
     private final String phoneNumber;
 
     @Valid
-    private final RoleDTO role;
+    private final RoleDto role;
 
 }

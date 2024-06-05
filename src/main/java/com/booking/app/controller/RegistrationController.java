@@ -1,85 +1,60 @@
 package com.booking.app.controller;
 
-import com.booking.app.controller.api.RegisterAPI;
-import com.booking.app.dto.EmailDTO;
+import com.booking.app.annotation.GlobalApiResponses;
 import com.booking.app.dto.RegistrationDTO;
-import com.booking.app.dto.TokenConfirmationDTO;
-import com.booking.app.services.MailSenderService;
+import com.booking.app.enums.ContentLanguage;
+import com.booking.app.exception.ErrorDetails;
 import com.booking.app.services.RegistrationService;
-import com.booking.app.util.HtmlTemplateUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import static com.booking.app.constant.ApiMessagesConstants.INVALID_CONTENT_LANGUAGE_HEADER_MESSAGE;
+import static com.booking.app.constant.RegistrationConstantMessages.EMAIL_IS_ALREADY_TAKEN_MESSAGE;
+import static com.booking.app.constant.RegistrationConstantMessages.USER_REGISTERED_SUCCESSFULLY_MESSAGE;
 
 /**
- * RegisterController handles user registration and email confirmation operations.
- * This controller provides endpoints for user registration, email confirmation, and resending confirmation email.
+ * REST controller for handling user registration and email confirmation.
  */
 @RestController
-@RequestMapping
+@RequestMapping("/auth")
 @AllArgsConstructor
-@Log4j2
-
-public class RegistrationController implements RegisterAPI {
+@Tag(name = "Registration", description = "Endpoints for registration and confirmation")
+@GlobalApiResponses
+public class RegistrationController {
 
     private final RegistrationService registrationService;
 
-    private final MailSenderService mailSenderService;
-
     /**
-     * Handles user registration request.
+     * Registers a new user.
      *
-     * @param dto The RegistrationDTO containing user registration information.
-     * @return ResponseDTO containing information about the registration process.
-     * @throws MessagingException Thrown if an error occurs during email sending.
-     * @throws IOException        Thrown if an I/O error occurs.
+     * @param language the language of the site
+     * @param dto      the registration data transfer object
+     * @throws MessagingException if an error occurs while sending the email
      */
-    @PostMapping("/register")
-    @Override
-    public ResponseEntity<?> signUp(@RequestHeader(HttpHeaders.CONTENT_LANGUAGE) String siteLanguage, @RequestBody RegistrationDTO dto) throws MessagingException, IOException {
-        EmailDTO register = registrationService.register(dto, siteLanguage);
-        log.info(String.format("User %s has successfully registered!", dto.getEmail()));
-        return ResponseEntity.ok().body(register);
-    }
-
-    /**
-     * Handles user email confirmation request.
-     *
-     * @param dto The TokenConfirmationDTO containing the confirmation token.
-     * @return ResponseEntity indicating the result of the email confirmation.
-     */
-    @PostMapping("/confirm-email")
-    @Override
-    public ResponseEntity<?> confirmEmailToken(@RequestBody TokenConfirmationDTO dto) {
-        if (registrationService.enableIfValid(dto)) {
-            log.info(String.format("User %s has successfully confirmed email!", dto.getEmail()));
-            return ResponseEntity.status(HttpStatus.OK).body("User successfully confirmed its email");
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token is not right");
-    }
-
-    /**
-     * Handles the request to resend the confirmation token email.
-     *
-     * @param dto The TokenConfirmationDTO containing the user's email.
-     * @return ResponseEntity indicating the result of the resend operation.
-     * @throws MessagingException Thrown if an error occurs during email sending.
-     * @throws IOException        Thrown if an I/O error occurs.
-     */
-    @PostMapping("/resend/confirm-token")
-    @Override
-    public ResponseEntity<?> resendConfirmEmailToken(@RequestHeader(HttpHeaders.CONTENT_LANGUAGE) String siteLanguage, @RequestBody TokenConfirmationDTO dto) throws MessagingException, IOException {
-        String htmlTemplate = HtmlTemplateUtils.getConfirmationHtmlTemplate(siteLanguage);
-        if (mailSenderService.resendEmail(dto.getEmail(), htmlTemplate)) {
-            return ResponseEntity.status(HttpStatus.OK).body("Confirm token has been sent one more time");
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad input");
+    @PostMapping("/sign-up")
+    @Operation(summary = "Register a user",
+            description = "Attempt to sign up new user",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            description = USER_REGISTERED_SUCCESSFULLY_MESSAGE + "\t\n"
+                                    + EMAIL_IS_ALREADY_TAKEN_MESSAGE),
+                    @ApiResponse(responseCode = "400", description = INVALID_CONTENT_LANGUAGE_HEADER_MESSAGE + " OR " + "Invalid request body", content = @Content(schema = @Schema(implementation = ErrorDetails.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
+            })
+    public void signUp(@RequestHeader(HttpHeaders.CONTENT_LANGUAGE) @Parameter(required = true, description = "Content Language", schema = @Schema(type = "string", allowableValues = {"eng", "ua"})) ContentLanguage language,
+                       @RequestBody @Valid @NotNull RegistrationDTO dto) throws
+            MessagingException {
+        registrationService.register(dto, language.getLanguage());
     }
 
 }

@@ -67,7 +67,7 @@ export default function Index() {
   function handleResendButton() {
     setError('');
     const body = { email: sessionStorage.getItem('email') };
-    makeQuerry('/resend/reset-token', JSON.stringify(body))
+    makeQuerry('/resend/reset-code', JSON.stringify(body))
       .then((response) => {
         checkResponseForResend(response);
         setResend(false);
@@ -115,7 +115,7 @@ export default function Index() {
       email: sessionStorage.getItem('email'),
       confirmPassword,
     };
-    makeQuerry('new-password', JSON.stringify(body))
+    makeQuerry('/users/password/reset', JSON.stringify(body),'PATCH')
       .then((response) => {
         setSend(false);
         checkResponse(response);

@@ -1,145 +1,88 @@
 package com.booking.app.controller;
 
-import com.booking.app.controller.api.LoginAPI;
-import com.booking.app.dto.AuthorizedUserDTO;
-import com.booking.app.dto.LoginDTO;
-import com.booking.app.dto.OAuth2IdTokenDTO;
-import com.booking.app.entity.UserCredentials;
-import com.booking.app.security.filter.JwtProvider;
-import com.booking.app.services.GoogleAccountService;
-import com.booking.app.util.CookieUtils;
+import com.booking.app.annotation.GlobalApiResponses;
+import com.booking.app.constant.ApiMessagesConstants;
+import com.booking.app.dto.AuthenticatedUserDto;
+import com.booking.app.dto.LoginDto;
+import com.booking.app.dto.SocialLoginDto;
+import com.booking.app.enums.SocialProvider;
+import com.booking.app.exception.ErrorDetails;
+import com.booking.app.services.LoginService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Base64;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.booking.app.constant.CustomHttpHeaders.REMEMBER_ME;
-import static com.booking.app.constant.CustomHttpHeaders.USER_ID;
-import static com.booking.app.constant.JwtTokenConstants.BEARER;
-import static com.booking.app.constant.JwtTokenConstants.REFRESH_TOKEN;
+import static com.booking.app.constant.ApiMessagesConstants.INVALID_REQUEST_BODY_FORMAT_OR_VALIDATION_ERROR_MESSAGE;
 
 /**
- * LoginController handles authentication-related operations.
- * This controller provides endpoints for user authentication.
+ * Controller responsible for handling login requests, both basic and social login.
  */
 @RestController
-@RequestMapping
 @RequiredArgsConstructor
 @Log4j2
-public class LoginController implements LoginAPI {
+@RequestMapping("/auth")
+@Tag(name = "Authentication", description = "Basic and socials login")
+@GlobalApiResponses
+public class LoginController {
 
-    private final AuthenticationManager authenticationManager;
 
-    private final JwtProvider jwtProvider;
+    private final LoginService loginService;
 
-    private final GoogleAccountService googleAccountServiceImpl;
+    @PostMapping("/sign-in")
+    @Operation(summary = "Basic authentication", description = "Authenticate by using email and password")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = ApiMessagesConstants.USER_HAS_BEEN_AUTHENTICATED_MESSAGE,
+                    content = {@Content(schema = @Schema(implementation = AuthenticatedUserDto.class), mediaType = MediaType.APPLICATION_JSON_VALUE)}),
+            @ApiResponse(responseCode = "400",
+                    description = INVALID_REQUEST_BODY_FORMAT_OR_VALIDATION_ERROR_MESSAGE,
+                    content = {@Content(schema = @Schema(implementation = ErrorDetails.class), mediaType = MediaType.APPLICATION_JSON_VALUE)}),
+            @ApiResponse(responseCode = "401",
+                    description = "Invalid credentials or such user doesn't exist",
+                    content = {@Content(schema = @Schema(implementation = ErrorDetails.class), mediaType = MediaType.APPLICATION_JSON_VALUE)})
+    })
+    public ResponseEntity<?> basicLogin(@RequestBody @Valid @NotNull LoginDto dto,
+                                        HttpServletRequest request,
+                                        HttpServletResponse response) {
+        return loginService.loginWithEmailAndPassword(dto, request, response);
+    }
 
-    /**
-     * Handles user sign-in request.
-     *
-     * @param loginDTO The LoginDTO containing user credentials.
-     * @param request  The HttpServletRequest containing the request information.
-     * @param response The HttpServletResponse containing the response information.
-     * @return ResponseEntity indicating the success of the sign-in operation.
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword());
-
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-
-        if (response.getHeader(HttpHeaders.SET_COOKIE) != null && response.getHeader(HttpHeaders.AUTHORIZATION) != null)
-            return ResponseEntity.ok().build();
-
-        if (authentication.isAuthenticated()) {
-            if (Boolean.TRUE.equals(loginDTO.getRememberMe())) {
-                CookieUtils.addCookie(response, REMEMBER_ME, loginDTO.getRememberMe().toString(), jwtProvider.getRefreshTokenExpirationMs(), true, true);
-            }
-
-            UserCredentials userCredentials = (UserCredentials) authentication.getPrincipal();
-
-            String refreshToken = jwtProvider.generateRefreshToken(loginDTO.getEmail());
-            String accessToken = jwtProvider.generateAccessToken(loginDTO.getEmail());
-
-            CookieUtils.addCookie(response, REFRESH_TOKEN, refreshToken, jwtProvider.getRefreshTokenExpirationMs(), true, true);
-            CookieUtils.addCookie(response, USER_ID, userCredentials.getId().toString(), 10000000, false, true);
-            response.setHeader(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authenticationToken);
-            SecurityContextHolder.setContext(context);
-
-            AuthorizedUserDTO authorizedUserDTO = AuthorizedUserDTO.builder()
-                    .email(userCredentials.getEmail())
-                    .notification(userCredentials.getUser().isNotification())
-                    .basicPicture(Base64.getEncoder().encodeToString(userCredentials.getUser().getProfilePicture()))
-                    .username(userCredentials.getUsername()).build();
-
-            return ResponseEntity.ok().body(authorizedUserDTO);
+    @PostMapping("/sign-in/{provider}")
+    @Operation(summary = "Social authentication", description = "Authenticate by using Google or Facebook")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = ApiMessagesConstants.USER_HAS_BEEN_AUTHENTICATED_MESSAGE,
+                    content = {@Content(schema = @Schema(implementation = AuthenticatedUserDto.class), mediaType = MediaType.APPLICATION_JSON_VALUE)}),
+            @ApiResponse(responseCode = "400",
+                    description = ApiMessagesConstants.NO_SOCIAL_IDENTITY_PROVIDERS_MESSAGE + " OR " + INVALID_REQUEST_BODY_FORMAT_OR_VALIDATION_ERROR_MESSAGE,
+                    content = {@Content(schema = @Schema(implementation = ErrorDetails.class), mediaType = MediaType.APPLICATION_JSON_VALUE)}),
+            @ApiResponse(responseCode = "401",
+                    description = ApiMessagesConstants.INVALID_CLIENT_PROVIDER_ID_MESSAGE,
+                    content = {@Content(schema = @Schema(implementation = ErrorDetails.class), mediaType = MediaType.APPLICATION_JSON_VALUE)}),
+    })
+    public ResponseEntity<?> socialLogin(@PathVariable("provider") @Parameter(required = true, description = "Provider type", schema = @Schema(type = "string", allowableValues = {"google", "facebook"})) SocialProvider provider,
+                                         @RequestBody @Valid @NotNull SocialLoginDto dto,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
+        if (provider == SocialProvider.GOOGLE) {
+            return loginService.loginWithGoogle(dto, request, response);
+        } else if (request.getRequestURI().contains("facebook")) {
+            // TODO complete authentication via Facebook
         }
-        return ResponseEntity.status(401).build();
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
-    /**
-     * Handles OAuth2 authentication with ID token.
-     *
-     * @param tokenDTO The OAuth2IdTokenDTO containing the ID token.
-     * @param response The HttpServletResponse used to set cookies and headers in the HTTP response.
-     * @return ResponseEntity with HTTP status 200 if authentication is successful, or
-     * ResponseEntity with HTTP status 401 if authentication fails.
-     * @throws GeneralSecurityException If a security error occurs during ID token verification.
-     * @throws IOException              If an I/O error occurs during ID token verification.
-     */
-    @PostMapping("/oauth2/authorize/*")
-    public ResponseEntity<?> loginOAuth2(@RequestBody OAuth2IdTokenDTO tokenDTO, HttpServletResponse response) {
-        AtomicReference<AuthorizedUserDTO> authorizedUserDTO = new AtomicReference<>();
-        googleAccountServiceImpl.loginOAuthGoogle(tokenDTO).
-
-                ifPresentOrElse(
-                        userCredentials -> {
-                            String refreshToken = jwtProvider.generateRefreshToken(userCredentials.getEmail());
-                            String accessToken = jwtProvider.generateAccessToken(userCredentials.getEmail());
-
-                            CookieUtils.addCookie(response, REFRESH_TOKEN, refreshToken, jwtProvider.getRefreshTokenExpirationMs(), true, true);
-                            CookieUtils.addCookie(response, USER_ID, userCredentials.getId().toString(), jwtProvider.getRefreshTokenExpirationMs(), false, true);
-                            response.setHeader(HttpHeaders.AUTHORIZATION, BEARER + accessToken);
-
-                            SecurityContext context = SecurityContextHolder.createEmptyContext();
-                            context.setAuthentication(new UsernamePasswordAuthenticationToken(userCredentials.getEmail(), userCredentials.getUsername(), userCredentials.getAuthorities()));
-                            SecurityContextHolder.setContext(context);
-                            authorizedUserDTO.set(AuthorizedUserDTO.builder()
-                                    .email(userCredentials.getEmail())
-                                    .notification(userCredentials.getUser().isNotification())
-                                    .username(userCredentials.getUsername())
-                                    .googlePicture(userCredentials.getUser().getUrlPicture()).build());
-
-                        },
-                        () -> {
-                            try {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Client ID is not right");
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                );
-
-        return ResponseEntity.ok().body(authorizedUserDTO);
-    }
 }

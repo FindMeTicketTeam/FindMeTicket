@@ -52,7 +52,7 @@ function TicketPage() {
       setConnection(false);
     }
     eventSourceQuery2({
-      address: `get/ticket/${ticketId}`,
+      address: `/tickets/${ticketId}`,
       handleMessage,
       handleError,
       handleOpen,

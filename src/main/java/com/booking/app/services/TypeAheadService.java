@@ -1,22 +1,29 @@
 package com.booking.app.services;
 
-import com.booking.app.dto.CitiesDTO;
-import com.booking.app.dto.StartLettersDTO;
-import com.booking.app.entity.UkrainianPlaces;
+import com.booking.app.dto.CityDto;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 public interface TypeAheadService {
+
     /**
      * Fetches and maps cities based on provided start letters, ignoring case.
      *
-     * @param letters DTO containing the start letters for city search.
+     * @param startLetters String containing the start letters for city search.
+     * @param siteLanguage Language of the site.
      * @return List of CitiesDTO matching the provided start letters.
+     * @throws IOException If an I/O error occurs during the process.
      */
-    List<CitiesDTO> findMatches(StartLettersDTO letters, String urlLanguage) throws IOException;
+    List<CityDto> findMatches(String startLetters, String siteLanguage) throws IOException;
 
-    public Long getCityId(String City, String language);
+    /**
+     * Gets the ID of a city by its name and language.
+     *
+     * @param city     The name of the city.
+     * @param language The language of the city name.
+     * @return The ID of the city, or null if not found.
+     */
+    Long getCityId(String city, String language);
+
 }

@@ -1,9 +1,7 @@
 /* eslint-disable max-len */
 import React from 'react';
 import './style.scss';
-import {
-  rank1, rank2, rank3, rank4, rank5, lockImage,
-} from './img/img';
+import {lockImage, rank1, rank2, rank3, rank4, rank5,} from './img/img';
 
 function AvatarPopup({ closeAvatarPopup, avatar }) {
   return (
@@ -51,7 +49,7 @@ function AvatarPopup({ closeAvatarPopup, avatar }) {
           {/* <div className="image-card">
             <img src={rank6} alt="rank6" className="image-rank6" />
             <img src={lockImage} alt="lock" className="lock-image" /> */}
-          {/* <img src={googlePicture || basicPicture || Ellipse} alt="Avatar" className="avatar-overlay-e" /> */}
+          {/* <img src={socialMediaAvatar || defaultAvatar || Ellipse} alt="Avatar" className="avatar-overlay-e" /> */}
           {/* <span className="level-text">Lvl 1</span>
           </div> */}
         </div>

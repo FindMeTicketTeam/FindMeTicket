@@ -4,7 +4,6 @@ import com.booking.app.exception.exception.UndefinedLanguageException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Log4j2
@@ -16,12 +15,11 @@ public class HtmlTemplateUtils {
      * @param language Language ua/eng
      * @return HTML template name
      */
-    public static String getConfirmationHtmlTemplate(String language) {
+    public static String getConfirmationTemplate(String language) {
         return switch (language) {
             case ("ua") -> "confirmMailUa";
             case ("eng") -> "confirmMailEng";
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
+            default -> throw new UndefinedLanguageException();
         };
     }
 
@@ -31,12 +29,11 @@ public class HtmlTemplateUtils {
      * @param language Language ua/eng
      * @return HTML template name
      */
-    public static String getResetPasswordHtmlTemplate(String language) {
+    public static String getResetPasswordTemplate(String language) {
         return switch (language) {
             case ("ua") -> "resetPasswordUa";
             case ("eng") -> "resetPasswordEng";
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
+            default -> throw new UndefinedLanguageException();
         };
     }
 

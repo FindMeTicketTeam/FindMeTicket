@@ -1,15 +1,17 @@
 package com.booking.app.security;
 
+import com.booking.app.exception.ErrorDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
 
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -19,11 +21,14 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        final Map<String, Object> body = new HashMap<>();
-        body.put("code", HttpServletResponse.SC_UNAUTHORIZED);
-        body.put("payload", "You need to login first in order to perform this action.");
-
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                authException.getMessage(),
+                request.getRequestURI(),
+                HttpStatus.valueOf(response.getStatus())
+        );
         final ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(response.getOutputStream(), body);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.writeValue(response.getOutputStream(), errorDetails);
     }
 }

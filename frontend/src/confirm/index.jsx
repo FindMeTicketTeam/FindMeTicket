@@ -64,7 +64,7 @@ export default function Confirm() {
       email: sessionStorage.getItem('email'),
       token: code,
     };
-    makeQuerry('confirm-email', JSON.stringify(body))
+    makeQuerry('/verify', JSON.stringify(body))
       .then((response) => {
         setSend(false);
         statusChecks(response);
@@ -84,7 +84,7 @@ export default function Confirm() {
 
   function handleResendButton() {
     const body = { email: sessionStorage.getItem('email') };
-    makeQuerry('/resend/confirm-token', JSON.stringify(body))
+    makeQuerry('/resend/verification-code', JSON.stringify(body))
       .then((response) => {
         setResend(false);
         statusChecksForResend(response);

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert_data_role
+      author: Mykhailo Marchuk
+
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO roles (type) VALUES
+                 ('USER'),
+                 ('ADMIN'),
+                 ('MANAGER');

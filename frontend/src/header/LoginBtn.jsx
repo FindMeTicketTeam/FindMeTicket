@@ -16,7 +16,7 @@ export default function LoginBtn({ status, updateAuthValue }) {
   function handleLogoutButton() {
     setLogout(false);
 
-    makeQuerry('logout').then((response) => {
+    makeQuerry('/sign-out').then((response) => {
       switch (response.status) {
         case 200:
           updateAuthValue(null);

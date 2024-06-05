@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1705059591405-14
+      author: Mykhailo Marchuk
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+
+      changes:
+        - loadData:
+            tableName: ukrainian_cities
+            file: classpath:/places/ukr-places-common.csv

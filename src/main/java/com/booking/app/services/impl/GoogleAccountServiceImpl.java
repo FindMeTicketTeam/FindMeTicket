@@ -1,20 +1,19 @@
 package com.booking.app.services.impl;
 
-import com.booking.app.dto.OAuth2IdTokenDTO;
+import com.booking.app.dto.SocialLoginDto;
 import com.booking.app.entity.Role;
 import com.booking.app.entity.User;
-import com.booking.app.entity.UserCredentials;
-import com.booking.app.enums.EnumProvider;
 import com.booking.app.enums.EnumRole;
 import com.booking.app.repositories.RoleRepository;
-import com.booking.app.repositories.UserCredentialsRepository;
+import com.booking.app.repositories.UserRepository;
 import com.booking.app.services.GoogleAccountService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +26,18 @@ import java.util.Optional;
  * This service provides functionality for handling Google OAuth login and user creation or update.
  */
 @Service
+@RequiredArgsConstructor
 public class GoogleAccountServiceImpl implements GoogleAccountService {
 
-    private final UserCredentialsRepository userCredentialsRepository;
+    private final UserRepository userRepository;
+
     private final RoleRepository roleRepository;
-    private final GoogleIdTokenVerifier verifier;
+    @Value("${app.googleClientId}")
+    String clientId;
+    private GoogleIdTokenVerifier verifier;
 
-
-    @Autowired
-    public GoogleAccountServiceImpl(@Value("${app.googleClientId}") String clientId, UserCredentialsRepository userCredentialsRepository, RoleRepository roleRepository) {
-        this.userCredentialsRepository = userCredentialsRepository;
-        this.roleRepository = roleRepository;
+    @PostConstruct
+    void setGoogleIdTokenVerifier() {
         NetHttpTransport transport = new NetHttpTransport();
         JsonFactory jsonFactory = new GsonFactory();
         verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
@@ -46,12 +46,12 @@ public class GoogleAccountServiceImpl implements GoogleAccountService {
     }
 
     /**
-     * Login a user using Google OAuth and create or update the user's credentials.
+     * Login a user using Google OAuth and create or update the user
      *
      * @param requestBody DTO containing the Google OAuth2 ID Token.
-     * @return UserCredentials for the logged-in user.
+     * @return User for the logged-in user.
      */
-    public Optional<UserCredentials> loginOAuthGoogle(OAuth2IdTokenDTO requestBody) {
+    public Optional<User> loginOAuthGoogle(SocialLoginDto requestBody) {
         try {
             GoogleIdToken account = verifier.verify(requestBody.getIdToken());
             return Optional.of(createOrUpdateUser(account));
@@ -64,34 +64,24 @@ public class GoogleAccountServiceImpl implements GoogleAccountService {
      * Create or update a user based on the information in the provided Google ID Token.
      *
      * @param googleIdToken Google ID Token containing user information.
-     * @return UserCredentials for the created or updated user.
+     * @return User for the created or updated user.
      */
-    private UserCredentials createOrUpdateUser(GoogleIdToken googleIdToken) {
+    private User createOrUpdateUser(GoogleIdToken googleIdToken) {
         GoogleIdToken.Payload payload = googleIdToken.getPayload();
-        UserCredentials existingAccount = userCredentialsRepository.findByEmail(payload.getEmail()).orElse(null);
+        User existingAccount = userRepository.findByEmail(payload.getEmail()).orElse(null);
         Role role = roleRepository.findRoleByEnumRole(EnumRole.USER);
         if (existingAccount == null) {
-            User user = User.builder()
-                    .security(
-                            UserCredentials.builder()
-                                    .provider(EnumProvider.GOOGLE)
-                                    .username(payload.get("given_name") + " " + payload.get("family_name"))
-                                    .email(payload.getEmail())
-                                    .enabled(true)
-                                    .accountNonExpired(true)
-                                    .credentialsNonExpired(true)
-                                    .accountNonLocked(true)
-                                    .build()
-                    )
-                    .urlPicture((String) payload.get("picture"))
-                    .role(role)
-                    .build();
-            user.getSecurity().setUser(user);
-            return userCredentialsRepository.save(user.getSecurity());
+            User user = User.createGoogleUser(
+                    role,
+                    payload.get("given_name") + " " + payload.get("family_name"),
+                    payload.getEmail(),
+                    (String) payload.get("picture")
+            );
+            return userRepository.save(user);
         }
         existingAccount.setUsername(payload.get("given_name") + " " + payload.get("family_name"));
-        existingAccount.getUser().setUrlPicture((String) payload.get("picture"));
-        userCredentialsRepository.save(existingAccount);
+        existingAccount.setSocialMediaAvatar((String) payload.get("picture"));
+        userRepository.save(existingAccount);
         return existingAccount;
     }
 

@@ -92,7 +92,7 @@ export default function SearchField({
     }
 
     eventSourceQuery2({
-      address: 'searchTickets',
+      address: '/ticket/search',
       body: JSON.stringify(requestBody),
       handleOpen,
       handleMessage,
@@ -107,7 +107,7 @@ export default function SearchField({
       ...body,
       departureDate: dateFormat.format(body.departureDate),
     };
-    makeQuerry('selectedTransport', JSON.stringify(requestBody))
+    makeQuerry('/tickets/transport', JSON.stringify(requestBody))
       .then((response) => {
         setTicketsData(response.body);
       })
@@ -123,7 +123,7 @@ export default function SearchField({
       sortingBy: searchParams.get('sort'),
       ascending: searchParams.get('ascending') === 'true',
     };
-    const response = await makeQuerry('sortedBy', JSON.stringify(requestBody));
+    const response = await makeQuerry('/tickets/sort', JSON.stringify(requestBody));
 
     const responseBody = response.status === 200 ? response.body : null;
     setTicketsData(responseBody);

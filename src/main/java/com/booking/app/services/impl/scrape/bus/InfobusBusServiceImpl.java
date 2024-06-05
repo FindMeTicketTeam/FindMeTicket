@@ -19,7 +19,6 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -143,15 +142,6 @@ public class InfobusBusServiceImpl implements ScraperService {
         }
     }
 
-    private String determineBaseUri(String language) {
-        return switch (language) {
-            case ("ua") -> linkProps.getInfobusUaBus();
-            case ("eng") -> linkProps.getInfobusEngBus();
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
-        };
-    }
-
     private static void processTicketInfo(SseEmitter emitter, BusTicket ticket, List<WebElement> elements, WebDriver driver, WebDriverWait wait, MutableBoolean emitterNotExpired) throws IOException {
 
         BusInfo priceInfo = ticket.getInfoList().stream().filter(t -> t.getSourceWebsite().equals(SiteConstants.INFOBUS)).findFirst().get();
@@ -180,7 +170,7 @@ public class InfobusBusServiceImpl implements ScraperService {
         }
 
         if (priceInfo.getLink() != null) {
-            if(emitterNotExpired.booleanValue()) {
+            if (emitterNotExpired.booleanValue()) {
                 emitter.send(SseEmitter.event().name(SiteConstants.INFOBUS).data(
                         UrlAndPriceDTO.builder()
                                 .price(priceInfo.getPrice())
@@ -188,6 +178,14 @@ public class InfobusBusServiceImpl implements ScraperService {
                                 .build()));
             }
         } else log.info("INFOBUS URL NOT FOUND");
+    }
+
+    private String determineBaseUri(String language) {
+        return switch (language) {
+            case ("ua") -> linkProps.getInfobusUaBus();
+            case ("eng") -> linkProps.getInfobusEngBus();
+            default -> throw new UndefinedLanguageException();
+        };
     }
 
     private static boolean areTicketsPresent(WebDriverWait wait, WebDriver driver) {

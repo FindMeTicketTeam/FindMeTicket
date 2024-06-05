@@ -13,10 +13,14 @@ import com.optimaize.langdetect.text.TextObjectFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service implementation for language detection.
+ */
 @Service
 @RequiredArgsConstructor
 public class LanguageDetectorServiceImpl implements LanguageDetectorService {

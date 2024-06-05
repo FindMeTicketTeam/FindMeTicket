@@ -1,22 +1,21 @@
 package com.booking.app.services.impl;
 
-import com.booking.app.dto.ReviewDTO;
+import com.booking.app.dto.ReviewDto;
 import com.booking.app.dto.SaveReviewDto;
 import com.booking.app.entity.Review;
 import com.booking.app.entity.User;
-import com.booking.app.entity.UserCredentials;
 import com.booking.app.repositories.ReviewRepository;
-import com.booking.app.repositories.UserCredentialsRepository;
 import com.booking.app.repositories.UserRepository;
 import com.booking.app.services.ReviewService;
 import com.booking.app.util.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,68 +25,72 @@ import static com.booking.app.constant.CustomHttpHeaders.USER_ID;
 @Log4j2
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
-
+    // todo refactor methods
     private final ReviewRepository reviewRepository;
 
-    private final UserCredentialsRepository userCredentialsRepository;
+    private final UserRepository userRepository;
 
     @Override
-    public ReviewDTO saveReview(SaveReviewDto saveReviewDto, HttpServletRequest request) {
+    public ReviewDto saveReview(SaveReviewDto saveReviewDto, HttpServletRequest request) {
+        return findUser(request)
+                .map(user -> {
+                    Review existingReview = user.getReview();
+                    if (Objects.nonNull(existingReview)) {
+                        reviewRepository.delete(existingReview);
+                    }
 
-        Optional<UUID> uuid = CookieUtils.getCookie(request, USER_ID).map(cookie -> UUID.fromString(cookie.getValue()));
+                    Review newReview = Review.builder()
+                            .reviewText(saveReviewDto.getReviewText())
+                            .grade(saveReviewDto.getGrade())
+                            .user(user)
+                            .build();
 
-        Optional<UserCredentials> userCredentials = uuid.flatMap(userCredentialsRepository::findById);
+                    user.setReview(newReview);
+                    reviewRepository.save(newReview);
 
-        if (userCredentials.isPresent()) {
-            User user = userCredentials.get().getUser();
-
-            if (user.getReview() != null) {
-                reviewRepository.delete(user.getReview());
-            }
-            Review review = Review.builder()
-                    .reviewText(saveReviewDto.getReviewText())
-                    .grade(saveReviewDto.getGrade())
-                    .user(user).build();
-            user.setReview(review);
-            reviewRepository.save(review);
-            return ReviewDTO.createInstance(review);
-        } else return null;
-
+                    return ReviewDto.createInstance(newReview);
+                })
+                .orElse(null);
     }
 
     @Override
-    public List<ReviewDTO> getReviewList() {
-
+    public List<ReviewDto> getReviewList() {
         List<Review> reviewList = reviewRepository.findAll();
-
-        return reviewList.stream().map(ReviewDTO::createInstance).toList();
+        return reviewList.stream().map(ReviewDto::createInstance).toList();
     }
 
     @Override
     public boolean deleteReview(HttpServletRequest request) {
-
-        Optional<UUID> uuid = CookieUtils.getCookie(request, USER_ID).map(cookie -> UUID.fromString(cookie.getValue()));
-
-        Optional<UserCredentials> userCredentials = uuid.flatMap(userCredentialsRepository::findById);
-
-        if (userCredentials.isPresent()) {
-            if (userCredentials.get().getUser().getReview() != null) {
-                reviewRepository.delete(userCredentials.get().getUser().getReview());
+        return findUser(request).map(user -> {
+            Review review = user.getReview();
+            if (Objects.nonNull(review)) {
+                reviewRepository.delete(review);
                 return true;
             }
-        }
-        return false;
+            return false;
+        }).orElse(false);
     }
 
     @Override
-    public ReviewDTO getUserReview(HttpServletRequest request) {
-
-        Optional<UUID> uuid = CookieUtils.getCookie(request, USER_ID).map(cookie -> UUID.fromString(cookie.getValue()));
-
-        Optional<UserCredentials> userCredentials = uuid.flatMap(userCredentialsRepository::findById);
-
-        Review review = userCredentials.get().getUser().getReview();
-
-        return review == null ? null : ReviewDTO.createInstance(review);
+    public ReviewDto getUserReview(HttpServletRequest request) {
+        return findUser(request)
+                .map(User::getReview)
+                .map(ReviewDto::createInstance)
+                .orElse(null);
     }
+    // todo thrown exception
+
+    /**
+     * Finds the user based on the HTTP request.
+     *
+     * @param request The HTTP request.
+     * @return Optional of User.
+     */
+    @NotNull
+    private Optional<User> findUser(HttpServletRequest request) {
+        Optional<UUID> uuid = CookieUtils.getCookie(request, USER_ID)
+                .map(cookie -> UUID.fromString(cookie.getValue()));
+        return uuid.flatMap(userRepository::findById);
+    }
+
 }

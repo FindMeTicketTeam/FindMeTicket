@@ -63,7 +63,7 @@ export default function Popup({ updateAuthValue }) {
       password,
       rememberMe: remember,
     };
-    makeQuerry('login', JSON.stringify(body))
+    makeQuerry('/sign-in', JSON.stringify(body))
       .then((response) => {
         setSend(false);
         statusChecks(response);
@@ -72,7 +72,7 @@ export default function Popup({ updateAuthValue }) {
 
   async function auth2Request(provider, credential) {
     const bodyJSON = JSON.stringify({ idToken: credential });
-    const response = await makeQuerry(`oauth2/authorize/${provider}`, bodyJSON);
+    const response = await makeQuerry(`/sign-in/${provider}`, bodyJSON);
     switch (response.status) {
       case 200:
         // navigate(-2);

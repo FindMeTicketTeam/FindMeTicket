@@ -1,8 +1,8 @@
 package com.booking.app.mapper;
 
-import com.booking.app.dto.SearchHistoryDto;
-import com.booking.app.entity.UserSearchHistory;
-import com.booking.app.enums.TypeTransportEnum;
+import com.booking.app.dto.HistoryDto;
+import com.booking.app.entity.SearchHistory;
+import com.booking.app.enums.TransportType;
 import com.booking.app.mapper.model.ArrivalCity;
 import com.booking.app.mapper.model.DepartureCity;
 import org.mapstruct.*;
@@ -10,18 +10,18 @@ import org.mapstruct.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, imports = {TypeTransportEnum.class})
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, imports = {TransportType.class})
 public interface HistoryMapper {
 
     @Mapping(source = "departureDate", target = "departureDate")
     @Mapping(source = "addingTime", target = "addingTime", qualifiedByName = "timeToString")
     @Mapping(source = "departureCityId", target = "departureCity", qualifiedByName = "getDepartureCity")
     @Mapping(source = "arrivalCityId", target = "arrivalCity", qualifiedByName = "getArrivalCity")
-    @Mapping(target = "bus", expression = "java(userSearchHistory.getTypeTransport().contains(TypeTransportEnum.BUS))")
-    @Mapping(target = "train", expression = "java(userSearchHistory.getTypeTransport().contains(TypeTransportEnum.TRAIN))")
-    @Mapping(target = "airplane", expression = "java(userSearchHistory.getTypeTransport().contains(TypeTransportEnum.AIRPLANE))")
-    @Mapping(target = "ferry", expression = "java(userSearchHistory.getTypeTransport().contains(TypeTransportEnum.FERRY))")
-    SearchHistoryDto historyToDto(UserSearchHistory userSearchHistory, @Context DepartureCity departureCity, @Context ArrivalCity arrivalCity);
+    @Mapping(target = "bus", expression = "java(searchHistory.getTypeTransport().contains(TransportType.BUS))")
+    @Mapping(target = "train", expression = "java(searchHistory.getTypeTransport().contains(TransportType.TRAIN))")
+    @Mapping(target = "airplane", expression = "java(searchHistory.getTypeTransport().contains(TransportType.AIRPLANE))")
+    @Mapping(target = "ferry", expression = "java(searchHistory.getTypeTransport().contains(TransportType.FERRY))")
+    HistoryDto historyToDto(SearchHistory searchHistory, @Context DepartureCity departureCity, @Context ArrivalCity arrivalCity);
 
     @Named("timeToString")
     static String timeToString(LocalDateTime time) {

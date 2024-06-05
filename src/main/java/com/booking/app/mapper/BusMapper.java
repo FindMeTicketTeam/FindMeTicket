@@ -4,7 +4,6 @@ import com.booking.app.dto.TicketDto;
 import com.booking.app.entity.ticket.bus.BusTicket;
 import com.booking.app.exception.exception.UndefinedLanguageException;
 import org.mapstruct.*;
-import org.springframework.http.HttpHeaders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -46,8 +45,7 @@ public interface BusMapper {
                 formatter = DateTimeFormatter.ofPattern("dd.MM, E", new Locale("en"));
                 yield date.format(formatter);
             }
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
+            default -> throw new UndefinedLanguageException();
         };
     }
 

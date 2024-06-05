@@ -3,6 +3,7 @@
 ##-------------------------
 springdoc:
   enable-kotlin: false
+  override-with-generic-response: false
 
 ##-------------------------
 ## Endpoints management

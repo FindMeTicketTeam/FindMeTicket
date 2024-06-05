@@ -19,7 +19,6 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -146,15 +145,6 @@ public class ProizdBusServiceImpl implements ScraperService {
         }
     }
 
-    private String determineBaseUri(String language) {
-        return switch (language) {
-            case ("ua") -> linkProps.getProizdUaBus();
-            case ("eng") -> linkProps.getProizdEngBus();
-            default ->
-                    throw new UndefinedLanguageException("Incomprehensible language passed into " + HttpHeaders.CONTENT_LANGUAGE);
-        };
-    }
-
     private static void processTicketInfo(SseEmitter emitter, BusTicket ticket, String language, List<WebElement> elements, MutableBoolean emitterNotExpired) throws IOException {
 
         BusInfo priceInfo = ticket.getInfoList().stream().filter(t -> t.getSourceWebsite().equals(SiteConstants.PROIZD_UA)).findFirst().get();
@@ -180,13 +170,21 @@ public class ProizdBusServiceImpl implements ScraperService {
         }
 
         if (priceInfo.getLink() != null) {
-            if(emitterNotExpired.booleanValue()) {
+            if (emitterNotExpired.booleanValue()) {
                 emitter.send(SseEmitter.event().name(SiteConstants.PROIZD_UA).data(UrlAndPriceDTO.builder()
                         .price(priceInfo.getPrice())
                         .url(priceInfo.getLink())
                         .build()));
             }
         } else log.info("PROIZD URL NOT FOUND");
+    }
+
+    private String determineBaseUri(String language) {
+        return switch (language) {
+            case ("ua") -> linkProps.getProizdUaBus();
+            case ("eng") -> linkProps.getProizdEngBus();
+            default -> throw new UndefinedLanguageException();
+        };
     }
 
     private static boolean areTicketsPresent(WebDriverWait wait, WebDriver driver) {

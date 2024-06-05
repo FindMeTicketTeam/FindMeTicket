@@ -1,28 +1,29 @@
 package com.booking.app.mapper;
 
-import com.booking.app.dto.EmailDTO;
-import com.booking.app.dto.LoginDTO;
+import com.booking.app.dto.EmailDto;
+import com.booking.app.dto.LoginDto;
 import com.booking.app.dto.RegistrationDTO;
 import com.booking.app.dto.UserDTO;
 import com.booking.app.entity.User;
-import com.booking.app.entity.UserCredentials;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UserMapper {
 
-    public UserDTO toDtoUser(User user);
+    UserDTO toUserDto(User user);
 
-    public User toEntityUser(UserDTO userDTO);
+    User toUser(UserDTO userDTO);
 
-    public LoginDTO toLoginDTO(UserCredentials userCredentials);
+    LoginDto toLoginDto(User user);
 
-    public UserCredentials toUserSecurity(LoginDTO userDTO);
+    User toUser(LoginDto userDTO);
 
-    public RegistrationDTO toRegistrationDTO(UserCredentials userCredentials);
+    RegistrationDTO toRegistrationDto(User user);
 
-    public UserCredentials toUserSecurity(RegistrationDTO registrationDTO);
+    User toUser(RegistrationDTO registrationDTO);
 
-    public EmailDTO toEmailDTO(UserCredentials userCredentials);
+    EmailDto toEmailDto(User user);
 
 }

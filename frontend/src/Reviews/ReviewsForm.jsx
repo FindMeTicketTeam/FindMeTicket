@@ -50,7 +50,7 @@ export default function ReviewsForm({ status, setReviews }) {
       reviewText,
     };
     setLoading(true);
-    const response = await makeQuery('saveReview', JSON.stringify(body));
+    const response = await makeQuery('/reviews', JSON.stringify(body));
     setLoading(false);
     if (response.status !== 200) {
       setError(true);
